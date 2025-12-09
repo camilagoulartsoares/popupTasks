@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "PopupTasks",
+  "version": "1.0.0",
+  "description": "Uma to-do list em popup feita com React.",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "PopupTasks"
+  },
+  "permissions": ["storage"]
+}
