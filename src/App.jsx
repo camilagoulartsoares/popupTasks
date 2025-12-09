@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+const STORAGE_KEY = "popupTasks";
+
 function App({ onClose }) {
-  // Carrega tarefas diretamente do localStorage (sem piscar)
   const [todos, setTodos] = useState(() => {
     try {
-      const saved = localStorage.getItem("popupTasks");
+      const saved = localStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -14,7 +15,6 @@ function App({ onClose }) {
 
   const [input, setInput] = useState("");
 
-  // Tema: tenta carregar, se não tiver usa prefers-color-scheme
   const [theme, setTheme] = useState(() => {
     try {
       const savedTheme = localStorage.getItem("popupTasksTheme");
@@ -30,7 +30,6 @@ function App({ onClose }) {
     }
   });
 
-  // Estado minimizado: já começa do valor salvo
   const [isMinimized, setIsMinimized] = useState(() => {
     try {
       const savedMin = localStorage.getItem("popupTasksMinimized");
@@ -40,12 +39,53 @@ function App({ onClose }) {
     }
   });
 
-  // Salva tarefas
+  // Carrega versão sincronizada (chrome.storage.sync) ao montar
   useEffect(() => {
     try {
-      localStorage.setItem("popupTasks", JSON.stringify(todos));
+      if (
+        typeof chrome === "undefined" ||
+        !chrome.storage ||
+        !chrome.storage.sync
+      ) {
+        return;
+      }
+
+      chrome.storage.sync.get([STORAGE_KEY], result => {
+        try {
+          const stored = result?.[STORAGE_KEY];
+          if (Array.isArray(stored)) {
+            setTodos(stored);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+          }
+        } catch {
+          // ignora
+        }
+      });
     } catch {
-      // ignora erros de storage
+      // ignora
+    }
+  }, []);
+
+  // Salva tarefas (local + sync entre dispositivos)
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    } catch {
+      // ignora erros de localStorage
+    }
+
+    try {
+      if (
+        typeof chrome === "undefined" ||
+        !chrome.storage ||
+        !chrome.storage.sync
+      ) {
+        return;
+      }
+
+      chrome.storage.sync.set({ [STORAGE_KEY]: todos });
+    } catch {
+      // ignora erros de chrome.storage
     }
   }, [todos]);
 
@@ -104,7 +144,6 @@ function App({ onClose }) {
     setIsMinimized(prev => !prev);
   }
 
-  // Clique com botão direito no ícone minimizado → fecha o widget de vez
   function handleMinimizeContext(e) {
     e.preventDefault();
     if (isMinimized && onClose) {
@@ -140,7 +179,6 @@ function App({ onClose }) {
             {isMinimized ? "📝" : "▾"}
           </button>
 
-          {/* X só aparece quando está aberto */}
           {!isMinimized && (
             <button
               className="icon-btn"
@@ -154,7 +192,6 @@ function App({ onClose }) {
         </div>
       </header>
 
-      {/* Conteúdo some no modo minimizado via CSS (.app.is-minimized .app-content ...) */}
       <div className="app-content">
         <form className="add-form" onSubmit={handleAdd}>
           <input
