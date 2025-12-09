@@ -13,20 +13,28 @@ function injectApp() {
 
   Object.assign(container.style, {
     position: "fixed",
-    bottom: "16px",
-    right: "16px",
+    bottom: "12px",
+    right: "12px",
     width: "320px",
     zIndex: "2147483647",
-    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.2)",
-    borderRadius: "12px",
+    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.22)",
+    borderRadius: "16px",
     overflow: "hidden",
-    background: "#f9fafb"
+    background: "transparent",
+    margin: "0",
+    padding: "0"
   });
 
   const root = ReactDOM.createRoot(container);
+
+  const handleClose = () => {
+    root.unmount();
+    container.remove();
+  };
+
   root.render(
     <React.StrictMode>
-      <App />
+      <App onClose={handleClose} />
     </React.StrictMode>
   );
 }
