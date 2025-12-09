@@ -29,3 +29,6 @@ O botão permanece discreto, sempre alinhado ao canto direito, sem interferir no
 Ao clicar novamente, o painel abre suavemente no mesmo local.
 
 Ideal para quem quer manter um to-do rápido sempre acessível sem ocupar espaço na tela 🎯
+
+
+<img width="389" height="272" alt="image" src="https://github.com/user-attachments/assets/50f52c74-b162-4b4b-b0a5-6361c9511b66" />
