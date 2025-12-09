@@ -1,16 +1,31 @@
-# React + Vite
+🚀 Widget flutuante minimizável
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O PopupTasks agora funciona como um widget flutuante, sempre presente no canto inferior direito da tela em qualquer site.
 
-Currently, two official plugins are available:
+Funcionalidades:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+📌 Posicionado automaticamente no canto inferior direito
 
-## React Compiler
+🔽 Modo minimizado em forma de botão redondo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+🎯 O botão minimizado fica exatamente onde termina o popup quando está aberto, garantindo consistência visual
 
-## Expanding the ESLint configuration
+🌗 Suporte completo a modo claro e escuro
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+✨ Animações suaves ao abrir, fechar e minimizar
+
+❌ Botão de fechar mantém o estado oculto até o usuário reabrir
+
+🔒 Widget embutido via content script, funcionando em qualquer aba
+
+Como funciona:
+
+Quando o widget está aberto, ele aparece como um painel de tarefas flutuante com largura fixa.
+
+Ao minimizar, o painel se transforma em um botão circular elegante.
+
+O botão permanece discreto, sempre alinhado ao canto direito, sem interferir no conteúdo da página.
+
+Ao clicar novamente, o painel abre suavemente no mesmo local.
+
+Ideal para quem quer manter um to-do rápido sempre acessível sem ocupar espaço na tela 🎯
