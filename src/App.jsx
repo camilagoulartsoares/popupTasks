@@ -2,38 +2,72 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App({ onClose }) {
-  const [todos, setTodos] = useState([]);
+  // Carrega tarefas diretamente do localStorage (sem piscar)
+  const [todos, setTodos] = useState(() => {
+    try {
+      const saved = localStorage.getItem("popupTasks");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [input, setInput] = useState("");
-  const [theme, setTheme] = useState("light");
-  const [isMinimized, setIsMinimized] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("popupTasks");
-    if (saved) {
-      setTodos(JSON.parse(saved));
+  // Tema: tenta carregar, se não tiver usa prefers-color-scheme
+  const [theme, setTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem("popupTasksTheme");
+      if (savedTheme === "light" || savedTheme === "dark") {
+        return savedTheme;
+      }
+      if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+      }
+      return "light";
+    } catch {
+      return "light";
     }
+  });
 
-    const savedTheme = localStorage.getItem("popupTasksTheme");
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setTheme(savedTheme);
-    } else if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
+  // Estado minimizado: já começa do valor salvo
+  const [isMinimized, setIsMinimized] = useState(() => {
+    try {
+      const savedMin = localStorage.getItem("popupTasksMinimized");
+      return savedMin === "true";
+    } catch {
+      return false;
     }
+  });
 
-    const savedMin = localStorage.getItem("popupTasksMinimized");
-    if (savedMin === "true") setIsMinimized(true);
-  }, []);
-
+  // Salva tarefas
   useEffect(() => {
-    localStorage.setItem("popupTasks", JSON.stringify(todos));
+    try {
+      localStorage.setItem("popupTasks", JSON.stringify(todos));
+    } catch {
+      // ignora erros de storage
+    }
   }, [todos]);
 
+  // Salva tema
   useEffect(() => {
-    localStorage.setItem("popupTasksTheme", theme);
+    try {
+      localStorage.setItem("popupTasksTheme", theme);
+    } catch {
+      // ignora
+    }
   }, [theme]);
 
+  // Salva estado minimizado
   useEffect(() => {
-    localStorage.setItem("popupTasksMinimized", isMinimized ? "true" : "false");
+    try {
+      localStorage.setItem(
+        "popupTasksMinimized",
+        isMinimized ? "true" : "false"
+      );
+    } catch {
+      // ignora
+    }
   }, [isMinimized]);
 
   function handleAdd(e) {
@@ -70,6 +104,14 @@ function App({ onClose }) {
     setIsMinimized(prev => !prev);
   }
 
+  // Clique com botão direito no ícone minimizado → fecha o widget de vez
+  function handleMinimizeContext(e) {
+    e.preventDefault();
+    if (isMinimized && onClose) {
+      onClose();
+    }
+  }
+
   return (
     <div className={`app theme-${theme} ${isMinimized ? "is-minimized" : ""}`}>
       <header className="app-header">
@@ -92,23 +134,27 @@ function App({ onClose }) {
             className="icon-btn minimize-btn"
             type="button"
             onClick={toggleMinimize}
+            onContextMenu={handleMinimizeContext}
             aria-label={isMinimized ? "Expandir" : "Minimizar"}
           >
             {isMinimized ? "📝" : "▾"}
-
           </button>
 
-          <button
-            className="icon-btn"
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar widget"
-          >
-            ×
-          </button>
+          {/* X só aparece quando está aberto */}
+          {!isMinimized && (
+            <button
+              className="icon-btn"
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar widget"
+            >
+              ×
+            </button>
+          )}
         </div>
       </header>
 
+      {/* Conteúdo some no modo minimizado via CSS (.app.is-minimized .app-content ...) */}
       <div className="app-content">
         <form className="add-form" onSubmit={handleAdd}>
           <input
