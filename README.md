@@ -1,11 +1,15 @@
 # Widget Flutuante Minimizável — PopupTasks
 
-O PopupTasks agora opera como um widget flutuante fixo no canto inferior direito da tela, disponível em qualquer site por meio de um content script.
+O PopupTasks é um widget flutuante de tarefas que acompanha você em qualquer site, sempre fixo no canto inferior direito da tela. Ele é injetado via content script e funciona de forma leve, prática e totalmente integrada ao navegador.
 
-## Funcionalidades
+Funcionalidades
 
-- Posicionamento automático no canto inferior direito.
-- Funciona em qualquer aba, integrado ao navegador.
+- Widget flutuante disponível em qualquer página.
+- Sincronização automática entre abas em tempo real.
+- Armazenamento híbrido (chrome.storage.sync + localStorage).
+- Tema claro/escuro com salvamento automático.
+- Modo minimizado para ocupar menos espaço.
+- To-do completo: adicionar, concluir, excluir e limpar tarefas concluídas.
 
 ## Objetivo
 
