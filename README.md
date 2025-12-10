@@ -13,3 +13,6 @@ Oferecer um to-do rápido e sempre acessível, sem ocupar espaço na tela e mant
 
 
 <img width="389" height="272" alt="image" src="https://github.com/user-attachments/assets/50f52c74-b162-4b4b-b0a5-6361c9511b66" />
+
+
+
