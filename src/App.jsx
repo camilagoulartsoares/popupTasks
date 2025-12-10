@@ -39,63 +39,70 @@ function App({ onClose }) {
     }
   });
 
-  // Carrega versão sincronizada (chrome.storage.sync) ao montar
+  // Carrega versão sincronizada do chrome.storage.sync ao montar
   useEffect(() => {
     try {
-      if (
-        typeof chrome === "undefined" ||
-        !chrome.storage ||
-        !chrome.storage.sync
-      ) {
-        return;
-      }
+      if (!chrome?.storage?.sync) return;
 
       chrome.storage.sync.get([STORAGE_KEY], result => {
-        try {
-          const stored = result?.[STORAGE_KEY];
-          if (Array.isArray(stored)) {
-            setTodos(stored);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-          }
-        } catch {
-          // ignora
+        const stored = result?.[STORAGE_KEY];
+        if (Array.isArray(stored)) {
+          setTodos(stored);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
         }
       });
-    } catch {
-      // ignora
-    }
+    } catch {}
   }, []);
 
-  // Salva tarefas (local + sync entre dispositivos)
+  // Salva alterações de todos no localStorage + chrome.storage.sync
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-    } catch {
-      // ignora erros de localStorage
-    }
+    } catch {}
 
     try {
-      if (
-        typeof chrome === "undefined" ||
-        !chrome.storage ||
-        !chrome.storage.sync
-      ) {
-        return;
-      }
-
+      if (!chrome?.storage?.sync) return;
       chrome.storage.sync.set({ [STORAGE_KEY]: todos });
-    } catch {
-      // ignora erros de chrome.storage
-    }
+    } catch {}
   }, [todos]);
+
+  // 🔥 NOVO: Ouve alterações do chrome.storage.sync feitas em OUTRAS abas
+  useEffect(() => {
+    try {
+      if (!chrome?.storage?.onChanged) return;
+
+      const handleChange = (changes, area) => {
+        if (area !== "sync") return;
+
+        const change = changes[STORAGE_KEY];
+        if (!change) return;
+
+        const newTodos = change.newValue;
+        if (!Array.isArray(newTodos)) return;
+
+        setTodos(prev => {
+          const prevStr = JSON.stringify(prev);
+          const nextStr = JSON.stringify(newTodos);
+          if (prevStr === nextStr) return prev;
+          return newTodos;
+        });
+
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(newTodos));
+        } catch {}
+      };
+
+      chrome.storage.onChanged.addListener(handleChange);
+
+      return () => chrome.storage.onChanged.removeListener(handleChange);
+    } catch {}
+  }, []);
 
   // Salva tema
   useEffect(() => {
     try {
       localStorage.setItem("popupTasksTheme", theme);
-    } catch {
-      // ignora
-    }
+    } catch {}
   }, [theme]);
 
   // Salva estado minimizado
@@ -105,19 +112,19 @@ function App({ onClose }) {
         "popupTasksMinimized",
         isMinimized ? "true" : "false"
       );
-    } catch {
-      // ignora
-    }
+    } catch {}
   }, [isMinimized]);
 
   function handleAdd(e) {
     e.preventDefault();
     if (!input.trim()) return;
+
     const newTodo = {
       id: Date.now(),
       text: input.trim(),
       done: false
     };
+
     setTodos([newTodo, ...todos]);
     setInput("");
   }
@@ -160,32 +167,20 @@ function App({ onClose }) {
         </div>
 
         <div className="header-actions">
-          <button
-            className="icon-btn"
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Alternar tema claro/escuro"
-          >
+          <button className="icon-btn" onClick={toggleTheme}>
             {theme === "light" ? "🌙" : "☀️"}
           </button>
 
           <button
             className="icon-btn minimize-btn"
-            type="button"
             onClick={toggleMinimize}
             onContextMenu={handleMinimizeContext}
-            aria-label={isMinimized ? "Expandir" : "Minimizar"}
           >
             {isMinimized ? "📝" : "▾"}
           </button>
 
           {!isMinimized && (
-            <button
-              className="icon-btn"
-              type="button"
-              onClick={onClose}
-              aria-label="Fechar widget"
-            >
+            <button className="icon-btn" onClick={onClose}>
               ×
             </button>
           )}
@@ -205,23 +200,12 @@ function App({ onClose }) {
 
         <ul className="todo-list">
           {todos.map(todo => (
-            <li
-              key={todo.id}
-              className={`todo-item ${todo.done ? "done" : ""}`}
-            >
-              <button
-                className="check"
-                onClick={() => toggleTodo(todo.id)}
-                aria-label="Concluir"
-              >
+            <li key={todo.id} className={`todo-item ${todo.done ? "done" : ""}`}>
+              <button className="check" onClick={() => toggleTodo(todo.id)}>
                 {todo.done ? "✔" : ""}
               </button>
               <span className="text">{todo.text}</span>
-              <button
-                className="delete"
-                onClick={() => removeTodo(todo.id)}
-                aria-label="Remover"
-              >
+              <button className="delete" onClick={() => removeTodo(todo.id)}>
                 ×
               </button>
             </li>
