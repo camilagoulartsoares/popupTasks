@@ -27,6 +27,11 @@ body {
   box-sizing: border-box;
   background: var(--bg);
   color: var(--fg);
+
+  /* bordas e sombra do card aberto */
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
@@ -42,7 +47,7 @@ body {
 /* Tema escuro mais claro/agradável */
 
 .app.theme-dark {
-  --bg: #020617;      /* fundo do card */
+  --bg: #020617;
   --fg: #e5e7eb;
   --muted: #9ca3af;
   --border: #1f2937;
@@ -129,15 +134,18 @@ body {
   min-height: 44px;
   max-height: 44px;
   padding: 0;
+
+  /* bolinha perfeita */
   border-radius: 999px;
   background: var(--accent);
-  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.35);
-  margin-left: auto; /* joga a bolinha pro lado direito do container */
+
+  /* sem sombra */
+  box-shadow: none;
+
+  margin-left: auto;
 }
 
-
-
-/* esconde tudo, menos o botão de minimizar */
+/* esconde elementos no modo minimizado */
 
 .app.is-minimized .title-group,
 .app.is-minimized .badge,
@@ -162,12 +170,11 @@ body {
   color: #ffffff;
 }
 
-/* tira o X quando está minimizado (pra não sumir tudo sem querer) */
 .app.is-minimized .header-actions .minimize-btn + .icon-btn {
   display: none;
 }
 
-/* ---------- Form e lista (modo aberto) ---------- */
+/* ---------- Form e lista ---------- */
 
 .add-form {
   display: flex;

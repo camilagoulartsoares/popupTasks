@@ -17,13 +17,14 @@ function injectApp() {
     right: "12px",
     width: "320px",
     zIndex: "2147483647",
-    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.22)",
-    borderRadius: "16px",
-    overflow: "hidden",
     background: "transparent",
     margin: "0",
-    padding: "0"
+    padding: "0",
+    boxShadow: "none",
+    borderRadius: "0",
+    overflow: "visible"
   });
+
 
   const root = ReactDOM.createRoot(container);
 
