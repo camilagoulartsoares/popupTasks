@@ -39,7 +39,6 @@ function App({ onClose }) {
     }
   });
 
-  // Carrega versão sincronizada do chrome.storage.sync ao montar
   useEffect(() => {
     try {
       if (!chrome?.storage?.sync) return;
@@ -54,7 +53,6 @@ function App({ onClose }) {
     } catch {}
   }, []);
 
-  // Salva alterações de todos no localStorage + chrome.storage.sync
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
@@ -66,7 +64,6 @@ function App({ onClose }) {
     } catch {}
   }, [todos]);
 
-  // 🔥 NOVO: Ouve alterações do chrome.storage.sync feitas em OUTRAS abas
   useEffect(() => {
     try {
       if (!chrome?.storage?.onChanged) return;
@@ -98,14 +95,34 @@ function App({ onClose }) {
     } catch {}
   }, []);
 
-  // Salva tema
+  useEffect(() => {
+    const handleStorage = event => {
+      if (event.key !== STORAGE_KEY) return;
+      if (!event.newValue) return;
+
+      try {
+        const parsed = JSON.parse(event.newValue);
+        if (!Array.isArray(parsed)) return;
+
+        setTodos(prev => {
+          const prevStr = JSON.stringify(prev);
+          const nextStr = JSON.stringify(parsed);
+          if (prevStr === nextStr) return prev;
+          return parsed;
+        });
+      } catch {}
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem("popupTasksTheme", theme);
     } catch {}
   }, [theme]);
 
-  // Salva estado minimizado
   useEffect(() => {
     try {
       localStorage.setItem(
