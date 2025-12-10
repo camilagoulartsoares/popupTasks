@@ -21,39 +21,41 @@ body {
   --badge-fg: #374151;
 
   width: 320px;
-  min-height: 80px;
-  max-height: 480px;
+
+  /* ALTURA FIXA FINAL */
+  height: 300px;
+  max-height: 300px;
+
   padding: 12px 12px 14px;
   box-sizing: border-box;
   background: var(--bg);
   color: var(--fg);
 
-  /* bordas e sombra do card aberto */
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.22);
+
+  display: flex;
+  flex-direction: column;
 
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
-    max-height 0.25s ease,
     box-shadow 0.2s ease,
-    transform 0.2s ease,
     opacity 0.2s ease,
     padding 0.2s ease,
     width 0.2s ease,
     border-radius 0.2s ease;
 }
 
-/* Tema escuro mais claro/agradável */
-
+/* Tema escuro corrigido */
 .app.theme-dark {
   --bg: #020617;
-  --fg: #e5e7eb;
+  --fg: #f3f4f6;
   --muted: #9ca3af;
-  --border: #1f2937;
+  --border: #4b5563;
   --card-bg: #020617;
   --accent: #6366f1;
-  --danger: #f97373;
+  --danger: #fca5a5;
   --badge-bg: #111827;
   --badge-fg: #e5e7eb;
 }
@@ -77,6 +79,7 @@ body {
   font-size: 16px;
   margin: 0;
   font-weight: 600;
+  color: var(--fg) !important;
 }
 
 .badge {
@@ -114,38 +117,35 @@ body {
   color: var(--fg);
 }
 
-/* Conteúdo principal (card aberto) */
+/* Conteúdo com scroll interno */
 
 .app-content {
   margin-top: 10px;
-  max-height: 360px;
-  overflow: hidden;
-  opacity: 1;
-  transition:
-    opacity 0.2s ease,
-    max-height 0.2s ease,
-    margin-top 0.2s ease;
+
+  flex: 1;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  transition: opacity 0.2s ease;
 }
 
 /* ---------- ESTADO MINIMIZADO (bolinha) ---------- */
 
 .app.is-minimized {
   width: 44px;
-  min-height: 44px;
+  height: 44px;
   max-height: 44px;
   padding: 0;
 
-  /* bolinha perfeita */
   border-radius: 999px;
   background: var(--accent);
-
-  /* sem sombra */
   box-shadow: none;
 
   margin-left: auto;
+  display: block;
 }
-
-/* esconde elementos no modo minimizado */
 
 .app.is-minimized .title-group,
 .app.is-minimized .badge,
@@ -174,7 +174,7 @@ body {
   display: none;
 }
 
-/* ---------- Form e lista ---------- */
+/* ---------- Formulário ---------- */
 
 .add-form {
   display: flex;
@@ -202,6 +202,16 @@ body {
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
 }
 
+/* DARK MODE — inputs mais visíveis */
+.app.theme-dark .add-form input {
+  background: #030a1a;
+  border-color: var(--border);
+}
+
+.app.theme-dark .add-form input::placeholder {
+  color: #6b7280;
+}
+
 .add-form button {
   width: 32px;
   border-radius: 8px;
@@ -216,12 +226,15 @@ body {
   opacity: 0.9;
 }
 
+/* ---------- Lista ---------- */
+
 .todo-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 260px;
-  overflow-y: auto;
+
+  max-height: none;
+  overflow: visible;
 }
 
 .todo-item {
@@ -234,6 +247,12 @@ body {
   margin-bottom: 6px;
   font-size: 13px;
   border: 1px solid transparent;
+}
+
+/* DARK — itens mais claros */
+.app.theme-dark .todo-item {
+  background: #020617;
+  border-color: rgba(148, 163, 184, 0.35);
 }
 
 .todo-item.done {
@@ -256,6 +275,10 @@ body {
   justify-content: center;
   font-size: 11px;
   cursor: pointer;
+}
+
+.app.theme-dark .check {
+  border-color: rgba(148, 163, 184, 0.8);
 }
 
 .todo-item.done .check {
