@@ -10,6 +10,7 @@ Funcionalidades
 - Tema claro/escuro com salvamento automático.
 - Modo minimizado para ocupar menos espaço.
 - To-do completo: adicionar, concluir, excluir e limpar tarefas concluídas.
+- Edição inline de tarefas: edite o texto com 1 clique ou duplo clique, salvando com Enter ou ao clicar fora
 
 ## Objetivo
 
