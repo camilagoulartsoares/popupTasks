@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 const STORAGE_KEY = "popupTasks";
@@ -38,6 +38,17 @@ function App({ onClose }) {
       return false;
     }
   });
+
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const editInputRef = useRef(null);
+
+  useEffect(() => {
+    if (editingId !== null) {
+      editInputRef.current?.focus();
+      editInputRef.current?.select();
+    }
+  }, [editingId]);
 
   useEffect(() => {
     try {
@@ -142,20 +153,56 @@ function App({ onClose }) {
       done: false
     };
 
-    setTodos([newTodo, ...todos]);
+    setTodos(prev => [newTodo, ...prev]);
     setInput("");
   }
 
   function toggleTodo(id) {
-    setTodos(todos.map(t => (t.id === id ? { ...t, done: !t.done } : t)));
+    setTodos(prev =>
+      prev.map(t => (t.id === id ? { ...t, done: !t.done } : t))
+    );
+  }
+
+  function startEdit(todo) {
+    setEditingId(todo.id);
+    setEditingText(todo.text);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditingText("");
+  }
+
+  function saveEdit() {
+    if (editingId === null) return;
+
+    const next = editingText.trim();
+
+    if (!next) {
+      removeTodo(editingId);
+      return;
+    }
+
+    setTodos(prev =>
+      prev.map(t => (t.id === editingId ? { ...t, text: next } : t))
+    );
+
+    setEditingId(null);
+    setEditingText("");
+  }
+
+  function handleEditKeyDown(e) {
+    if (e.key === "Enter") saveEdit();
+    if (e.key === "Escape") cancelEdit();
   }
 
   function removeTodo(id) {
-    setTodos(todos.filter(t => t.id !== id));
+    setTodos(prev => prev.filter(t => t.id !== id));
+    if (editingId === id) cancelEdit();
   }
 
   function clearDone() {
-    setTodos(todos.filter(t => !t.done));
+    setTodos(prev => prev.filter(t => !t.done));
   }
 
   const remaining = todos.filter(t => !t.done).length;
@@ -217,11 +264,34 @@ function App({ onClose }) {
 
         <ul className="todo-list">
           {todos.map(todo => (
-            <li key={todo.id} className={`todo-item ${todo.done ? "done" : ""}`}>
-              <button className="check" onClick={() => toggleTodo(todo.id)}>
+            <li
+              key={todo.id}
+              className={`todo-item ${todo.done ? "done" : ""}`}
+              onDoubleClick={() => startEdit(todo)}
+            >
+              <button
+                className="check"
+                onClick={() => toggleTodo(todo.id)}
+                disabled={editingId === todo.id}
+              >
                 {todo.done ? "✔" : ""}
               </button>
-              <span className="text">{todo.text}</span>
+
+              {editingId === todo.id ? (
+                <input
+                  ref={editInputRef}
+                  className="edit-input"
+                  value={editingText}
+                  onChange={e => setEditingText(e.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                  onBlur={saveEdit}
+                />
+              ) : (
+                <span className="text" onClick={() => startEdit(todo)}>
+                  {todo.text}
+                </span>
+              )}
+
               <button className="delete" onClick={() => removeTodo(todo.id)}>
                 ×
               </button>

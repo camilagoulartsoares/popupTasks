@@ -333,3 +333,44 @@ body {
 .clear-done:hover {
   filter: brightness(0.96);
 }
+
+
+/* ---------- Input de edição da tarefa ---------- */
+
+.edit-input {
+  flex: 1;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 4px 6px;
+
+  border-radius: 6px;
+  border: 1px solid var(--border);
+
+  background: transparent;
+  color: var(--fg);
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+/* Light */
+.edit-input:focus {
+  background: var(--card-bg);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+/* Dark mode */
+.app.theme-dark .edit-input {
+  background: #020617;
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.app.theme-dark .edit-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35);
+}
