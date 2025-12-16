@@ -7,8 +7,6 @@ body {
   margin: 0;
 }
 
-/* ---------- Tema base com variáveis ---------- */
-
 .app {
   --bg: #f9fafb;
   --fg: #111827;
@@ -21,8 +19,6 @@ body {
   --badge-fg: #374151;
 
   width: 320px;
-
-  /* ALTURA FIXA FINAL */
   height: 300px;
   max-height: 300px;
 
@@ -47,7 +43,6 @@ body {
     border-radius 0.2s ease;
 }
 
-/* Tema escuro corrigido */
 .app.theme-dark {
   --bg: #020617;
   --fg: #f3f4f6;
@@ -59,8 +54,6 @@ body {
   --badge-bg: #111827;
   --badge-fg: #e5e7eb;
 }
-
-/* Header */
 
 .app-header {
   display: flex;
@@ -117,8 +110,6 @@ body {
   color: var(--fg);
 }
 
-/* Conteúdo com scroll interno */
-
 .app-content {
   margin-top: 10px;
 
@@ -130,8 +121,6 @@ body {
 
   transition: opacity 0.2s ease;
 }
-
-/* ---------- ESTADO MINIMIZADO (bolinha) ---------- */
 
 .app.is-minimized {
   width: 44px;
@@ -174,8 +163,6 @@ body {
   display: none;
 }
 
-/* ---------- Formulário ---------- */
-
 .add-form {
   display: flex;
   gap: 6px;
@@ -185,28 +172,15 @@ body {
 
 .add-form input {
   flex: 1;
-  height: 30px;           /* ↓ altura */
-  padding: 0 10px;        /* ↓ tira “altura” do padding vertical */
+  height: 30px;
+  padding: 0 10px;
   border-radius: 8px;
   border: 1px solid var(--border);
   font-size: 13px;
-  line-height: 30px;      /* ajuda a centralizar */
+  line-height: 30px;
   outline: none;
   background: var(--card-bg);
   color: var(--fg);
-}
-
-.add-form button {
-  width: 28px;            /* ↓ menor */
-  height: 30px;           /* igual ao input */
-  border-radius: 8px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-size: 16px;        /* ↓ menor que 18 */
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
 }
 
 .add-form input::placeholder {
@@ -218,7 +192,6 @@ body {
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
 }
 
-/* DARK MODE — inputs mais visíveis */
 .app.theme-dark .add-form input {
   background: #030a1a;
   border-color: var(--border);
@@ -228,12 +201,22 @@ body {
   color: #6b7280;
 }
 
+.add-form button {
+  width: 28px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
 
 .add-form button:hover {
   opacity: 0.9;
 }
-
-/* ---------- Lista ---------- */
 
 .todo-list {
   list-style: none;
@@ -256,7 +239,6 @@ body {
   border: 1px solid transparent;
 }
 
-/* DARK — itens mais claros */
 .app.theme-dark .todo-item {
   background: #020617;
   border-color: rgba(148, 163, 184, 0.35);
@@ -269,6 +251,33 @@ body {
 .todo-item.done .text {
   text-decoration: line-through;
   color: var(--muted);
+}
+
+.priority-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: var(--muted);
+  padding: 0;
+}
+
+.priority-baixa {
+  background: #22c55e;
+}
+
+.priority-media {
+  background: #eab308;
+}
+
+.priority-alta {
+  background: #ef4444;
+}
+
+.todo-item.done .priority-dot {
+  opacity: 0.4;
 }
 
 .check {
@@ -319,8 +328,6 @@ body {
   padding: 16px 0;
 }
 
-/* Botão limpar */
-
 .clear-done {
   width: 100%;
   margin-top: 8px;
@@ -340,9 +347,6 @@ body {
 .clear-done:hover {
   filter: brightness(0.96);
 }
-
-
-/* ---------- Input de edição da tarefa ---------- */
 
 .edit-input {
   flex: 1;
@@ -364,14 +368,12 @@ body {
     background-color 0.15s ease;
 }
 
-/* Light */
 .edit-input:focus {
   background: var(--card-bg);
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
 }
 
-/* Dark mode */
 .app.theme-dark .edit-input {
   background: #020617;
   border-color: rgba(148, 163, 184, 0.45);

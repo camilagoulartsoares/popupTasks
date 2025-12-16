@@ -22,7 +22,6 @@ function App({ onClose }) {
   const [editingText, setEditingText] = useState("");
   const editInputRef = useRef(null);
 
-  // 1) CARREGA UMA VEZ (hidrata) e só então libera salvar
   useEffect(() => {
     if (!chrome?.storage?.local) {
       setHydrated(true);
@@ -34,7 +33,13 @@ function App({ onClose }) {
       const storedTheme = result?.[THEME_KEY];
       const storedMin = result?.[MIN_KEY];
 
-      if (Array.isArray(storedTodos)) setTodos(storedTodos);
+      if (Array.isArray(storedTodos)) {
+        const normalized = storedTodos.map(t => ({
+          ...t,
+          priority: t?.priority || "media"
+        }));
+        setTodos(normalized);
+      }
 
       if (storedTheme === "light" || storedTheme === "dark") {
         setTheme(storedTheme);
@@ -55,7 +60,6 @@ function App({ onClose }) {
     }
   }, [editingId]);
 
-  // 2) SALVA SOMENTE DEPOIS QUE CARREGOU (evita apagar tudo ao abrir nova página)
   useEffect(() => {
     if (!hydrated) return;
     if (!chrome?.storage?.local) return;
@@ -74,7 +78,6 @@ function App({ onClose }) {
     chrome.storage.local.set({ [MIN_KEY]: isMinimized });
   }, [isMinimized, hydrated]);
 
-  // 3) SINCRONIZA ENTRE ABAS/PÁGINAS (sem loop)
   useEffect(() => {
     if (!chrome?.storage?.onChanged) return;
 
@@ -84,10 +87,15 @@ function App({ onClose }) {
       if (changes[STORAGE_KEY]) {
         const next = changes[STORAGE_KEY].newValue;
         if (Array.isArray(next)) {
+          const normalized = next.map(t => ({
+            ...t,
+            priority: t?.priority || "media"
+          }));
+
           setTodos(prev => {
             const prevStr = JSON.stringify(prev);
-            const nextStr = JSON.stringify(next);
-            return prevStr === nextStr ? prev : next;
+            const nextStr = JSON.stringify(normalized);
+            return prevStr === nextStr ? prev : normalized;
           });
         }
       }
@@ -116,6 +124,7 @@ function App({ onClose }) {
       id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()),
       text,
       done: false,
+      priority: "media",
       createdAt: Date.now()
     };
 
@@ -125,6 +134,18 @@ function App({ onClose }) {
 
   function toggleTodo(id) {
     setTodos(prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)));
+  }
+
+  function cyclePriority(id) {
+    const order = ["baixa", "media", "alta"];
+    setTodos(prev =>
+      prev.map(t => {
+        if (t.id !== id) return t;
+        const current = t.priority || "media";
+        const next = order[(order.indexOf(current) + 1) % order.length];
+        return { ...t, priority: next };
+      })
+    );
   }
 
   function startEdit(todo) {
@@ -151,7 +172,9 @@ function App({ onClose }) {
       return;
     }
 
-    setTodos(prev => prev.map(t => (t.id === editingId ? { ...t, text: next } : t)));
+    setTodos(prev =>
+      prev.map(t => (t.id === editingId ? { ...t, text: next } : t))
+    );
     setEditingId(null);
     setEditingText("");
   }
@@ -227,6 +250,13 @@ function App({ onClose }) {
               className={`todo-item ${todo.done ? "done" : ""}`}
               onDoubleClick={() => startEdit(todo)}
             >
+              <button
+                className={`priority-dot priority-${todo.priority || "media"}`}
+                onClick={() => cyclePriority(todo.id)}
+                title={`Prioridade: ${todo.priority || "media"}`}
+                disabled={editingId === todo.id}
+              />
+
               <button
                 className="check"
                 onClick={() => toggleTodo(todo.id)}
