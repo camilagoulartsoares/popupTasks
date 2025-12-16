@@ -2,46 +2,51 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
 const STORAGE_KEY = "popupTasks";
+const THEME_KEY = "popupTasksTheme";
+const MIN_KEY = "popupTasksMinimized";
 
 function App({ onClose }) {
-  const [todos, setTodos] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [hydrated, setHydrated] = useState(false);
 
+  const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
 
   const [theme, setTheme] = useState(() => {
-    try {
-      const savedTheme = localStorage.getItem("popupTasksTheme");
-      if (savedTheme === "light" || savedTheme === "dark") {
-        return savedTheme;
-      }
-      if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-        return "dark";
-      }
-      return "light";
-    } catch {
-      return "light";
-    }
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) return "dark";
+    return "light";
   });
 
-  const [isMinimized, setIsMinimized] = useState(() => {
-    try {
-      const savedMin = localStorage.getItem("popupTasksMinimized");
-      return savedMin === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const editInputRef = useRef(null);
+
+  // 1) CARREGA UMA VEZ (hidrata) e só então libera salvar
+  useEffect(() => {
+    if (!chrome?.storage?.local) {
+      setHydrated(true);
+      return;
+    }
+
+    chrome.storage.local.get([STORAGE_KEY, THEME_KEY, MIN_KEY], result => {
+      const storedTodos = result?.[STORAGE_KEY];
+      const storedTheme = result?.[THEME_KEY];
+      const storedMin = result?.[MIN_KEY];
+
+      if (Array.isArray(storedTodos)) setTodos(storedTodos);
+
+      if (storedTheme === "light" || storedTheme === "dark") {
+        setTheme(storedTheme);
+      }
+
+      if (typeof storedMin === "boolean") {
+        setIsMinimized(storedMin);
+      }
+
+      setHydrated(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (editingId !== null) {
@@ -50,107 +55,68 @@ function App({ onClose }) {
     }
   }, [editingId]);
 
+  // 2) SALVA SOMENTE DEPOIS QUE CARREGOU (evita apagar tudo ao abrir nova página)
   useEffect(() => {
-    try {
-      if (!chrome?.storage?.sync) return;
+    if (!hydrated) return;
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.set({ [STORAGE_KEY]: todos });
+  }, [todos, hydrated]);
 
-      chrome.storage.sync.get([STORAGE_KEY], result => {
-        const stored = result?.[STORAGE_KEY];
-        if (Array.isArray(stored)) {
-          setTodos(stored);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.set({ [THEME_KEY]: theme });
+  }, [theme, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.set({ [MIN_KEY]: isMinimized });
+  }, [isMinimized, hydrated]);
+
+  // 3) SINCRONIZA ENTRE ABAS/PÁGINAS (sem loop)
+  useEffect(() => {
+    if (!chrome?.storage?.onChanged) return;
+
+    const handleChange = (changes, area) => {
+      if (area !== "local") return;
+
+      if (changes[STORAGE_KEY]) {
+        const next = changes[STORAGE_KEY].newValue;
+        if (Array.isArray(next)) {
+          setTodos(prev => {
+            const prevStr = JSON.stringify(prev);
+            const nextStr = JSON.stringify(next);
+            return prevStr === nextStr ? prev : next;
+          });
         }
-      });
-    } catch {}
-  }, []);
+      }
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-    } catch {}
+      if (changes[THEME_KEY]) {
+        const next = changes[THEME_KEY].newValue;
+        if (next === "light" || next === "dark") setTheme(next);
+      }
 
-    try {
-      if (!chrome?.storage?.sync) return;
-      chrome.storage.sync.set({ [STORAGE_KEY]: todos });
-    } catch {}
-  }, [todos]);
-
-  useEffect(() => {
-    try {
-      if (!chrome?.storage?.onChanged) return;
-
-      const handleChange = (changes, area) => {
-        if (area !== "sync") return;
-
-        const change = changes[STORAGE_KEY];
-        if (!change) return;
-
-        const newTodos = change.newValue;
-        if (!Array.isArray(newTodos)) return;
-
-        setTodos(prev => {
-          const prevStr = JSON.stringify(prev);
-          const nextStr = JSON.stringify(newTodos);
-          if (prevStr === nextStr) return prev;
-          return newTodos;
-        });
-
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(newTodos));
-        } catch {}
-      };
-
-      chrome.storage.onChanged.addListener(handleChange);
-
-      return () => chrome.storage.onChanged.removeListener(handleChange);
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    const handleStorage = event => {
-      if (event.key !== STORAGE_KEY) return;
-      if (!event.newValue) return;
-
-      try {
-        const parsed = JSON.parse(event.newValue);
-        if (!Array.isArray(parsed)) return;
-
-        setTodos(prev => {
-          const prevStr = JSON.stringify(prev);
-          const nextStr = JSON.stringify(parsed);
-          if (prevStr === nextStr) return prev;
-          return parsed;
-        });
-      } catch {}
+      if (changes[MIN_KEY]) {
+        const next = changes[MIN_KEY].newValue;
+        if (typeof next === "boolean") setIsMinimized(next);
+      }
     };
 
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    chrome.storage.onChanged.addListener(handleChange);
+    return () => chrome.storage.onChanged.removeListener(handleChange);
   }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("popupTasksTheme", theme);
-    } catch {}
-  }, [theme]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        "popupTasksMinimized",
-        isMinimized ? "true" : "false"
-      );
-    } catch {}
-  }, [isMinimized]);
 
   function handleAdd(e) {
     e.preventDefault();
-    if (!input.trim()) return;
+    const text = input.trim();
+    if (!text) return;
 
     const newTodo = {
-      id: Date.now(),
-      text: input.trim(),
-      done: false
+      id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      text,
+      done: false,
+      createdAt: Date.now()
     };
 
     setTodos(prev => [newTodo, ...prev]);
@@ -158,9 +124,7 @@ function App({ onClose }) {
   }
 
   function toggleTodo(id) {
-    setTodos(prev =>
-      prev.map(t => (t.id === id ? { ...t, done: !t.done } : t))
-    );
+    setTodos(prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)));
   }
 
   function startEdit(todo) {
@@ -173,20 +137,21 @@ function App({ onClose }) {
     setEditingText("");
   }
 
+  function removeTodo(id) {
+    setTodos(prev => prev.filter(t => t.id !== id));
+    if (editingId === id) cancelEdit();
+  }
+
   function saveEdit() {
     if (editingId === null) return;
 
     const next = editingText.trim();
-
     if (!next) {
       removeTodo(editingId);
       return;
     }
 
-    setTodos(prev =>
-      prev.map(t => (t.id === editingId ? { ...t, text: next } : t))
-    );
-
+    setTodos(prev => prev.map(t => (t.id === editingId ? { ...t, text: next } : t)));
     setEditingId(null);
     setEditingText("");
   }
@@ -196,16 +161,9 @@ function App({ onClose }) {
     if (e.key === "Escape") cancelEdit();
   }
 
-  function removeTodo(id) {
-    setTodos(prev => prev.filter(t => t.id !== id));
-    if (editingId === id) cancelEdit();
-  }
-
   function clearDone() {
     setTodos(prev => prev.filter(t => !t.done));
   }
-
-  const remaining = todos.filter(t => !t.done).length;
 
   function toggleTheme() {
     setTheme(prev => (prev === "light" ? "dark" : "light"));
@@ -217,10 +175,10 @@ function App({ onClose }) {
 
   function handleMinimizeContext(e) {
     e.preventDefault();
-    if (isMinimized && onClose) {
-      onClose();
-    }
+    if (isMinimized && onClose) onClose();
   }
+
+  const remaining = todos.filter(t => !t.done).length;
 
   return (
     <div className={`app theme-${theme} ${isMinimized ? "is-minimized" : ""}`}>
@@ -298,9 +256,7 @@ function App({ onClose }) {
             </li>
           ))}
 
-          {todos.length === 0 && (
-            <li className="empty">Sem tarefas por enquanto ✨</li>
-          )}
+          {todos.length === 0 && <li className="empty">Sem tarefas por enquanto ✨</li>}
         </ul>
 
         {todos.some(t => t.done) && (
