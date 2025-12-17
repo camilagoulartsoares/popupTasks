@@ -165,24 +165,36 @@
 .priority-alta  { --p: var(--p-high); }
 
 .priority-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
+
   background-color: var(--p);
 
-  border: 0;
+  border: none;
   padding: 0;
   margin: 0;
 
-  display: block;
-  flex: 0 0 5px;
+  display: inline-block;
 
-  min-width: 5px;
-  min-height: 5px;
+  flex: 0 0 6px;
+  min-width: 6px;
+  min-height: 6px;
+
+  box-shadow: none;
+  outline: none;
 
   -webkit-appearance: none;
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.priority-dot:focus,
+.priority-dot:focus-visible,
+.priority-dot:active {
+  outline: none;
+  box-shadow: none;
 }
 
 
