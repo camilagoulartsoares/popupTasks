@@ -318,3 +318,47 @@
   background: rgba(15,23,42,0.06);
   color: #0f172a;
 }
+
+
+/* edição inline da tarefa */
+.edit-input {
+  flex: 1;
+  height: 28px;
+
+  font-size: 13px;
+  line-height: 1.2;
+
+  padding: 0 8px;
+
+  color: var(--fg);
+  background: transparent;
+
+  border: 1px dashed rgba(148,163,184,0.35);
+  border-radius: 8px;
+
+  outline: none;
+}
+
+/* seleção de texto */
+.edit-input::selection {
+  background: rgba(99,102,241,0.35);
+}
+
+/* ajuste específico para modo claro */
+.app.theme-light .edit-input {
+  background: rgba(15,23,42,0.04);
+  color: #0f172a;
+  border: 1px dashed rgba(15,23,42,0.25);
+}
+
+
+
+.edit-input::selection {
+  background: rgba(99,102,241,0.35);
+}
+
+/* tema claro */
+.app.theme-light .edit-input {
+  color: #0f172a;
+  border-color: rgba(15,23,42,0.25);
+}
