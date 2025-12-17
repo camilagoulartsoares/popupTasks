@@ -1,13 +1,18 @@
-/* =========================
-   RESET ABSOLUTO
-========================= */
-
+/* ========= BLINDAGEM TOTAL ========= */
 #popup-tasks-widget,
 #popup-tasks-widget * {
   box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 }
 
-#popup-tasks-widget button {
+#popup-tasks-widget *::before,
+#popup-tasks-widget *::after {
+  content: none !important;
+  display: none !important;
+}
+
+#popup-tasks-widget button,
+#popup-tasks-widget input {
   -webkit-appearance: none !important;
   appearance: none !important;
   background: none !important;
@@ -15,114 +20,271 @@
   padding: 0 !important;
   margin: 0 !important;
   box-shadow: none !important;
+  background-image: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
 }
 
-#popup-tasks-widget button::before,
-#popup-tasks-widget button::after {
-  content: none !important;
+#popup-tasks-widget :focus,
+#popup-tasks-widget :focus-visible {
+  outline: none !important;
 }
 
-/* =========================
-   BASE
-========================= */
-
+/* ========= APP ========= */
 .app {
   --bg: #020617;
   --fg: #f3f4f6;
-  --border: rgba(148, 163, 184, 0.35);
   --muted: #94a3b8;
+  --border: rgba(148, 163, 184, 0.26);
+  --accent: #6366f1;
+  --danger: #ef4444;
 
   --p-low: #22c55e;
   --p-med: #eab308;
   --p-high: #ef4444;
 
   width: 340px;
+  height: 320px;
   padding: 12px;
-  background: var(--bg);
+
   color: var(--fg);
-  border-radius: 16px;
+  background:
+    radial-gradient(700px 260px at 20% 0%, rgba(99, 102, 241, 0.22), transparent 55%),
+    var(--bg);
+
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+
+  display: flex;
+  flex-direction: column;
 }
 
-/* =========================
-   TODO ITEM
-========================= */
+/* ========= HEADER ========= */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid var(--border);
+}
+
+.title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title-group h1 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 650;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: rgba(243, 244, 246, 0.92);
+  width: fit-content;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--fg);
+}
+
+/* ========= CONTENT ========= */
+.app-content {
+  margin-top: 10px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ========= ADD FORM ========= */
+.add-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.add-form input {
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  background: rgba(2, 6, 23, 0.82);
+  color: var(--fg);
+}
+
+.add-form button {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: var(--accent) !important;
+  color: #fff !important;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* ========= LIST ========= */
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  gap: 12px;
+
+  padding: 11px 12px;
+  margin-bottom: 8px;
+
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.55);
+
+  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
 }
 
-/* =========================
-   MINI BOLINHA (FORÇADA)
-========================= */
-
-.priority-dot {
-  width: 6px !important;
-  height: 6px !important;
-  min-width: 6px !important;
-  min-height: 6px !important;
-  max-width: 6px !important;
-  max-height: 6px !important;
-
-  border-radius: 999px !important;
-  background: var(--p) !important;
-
-  display: block !important;
-  flex: 0 0 6px !important;
-  cursor: pointer;
-}
-
-/* cores */
+/* ========= PRIORIDADES ========= */
 .priority-baixa { --p: var(--p-low); }
 .priority-media { --p: var(--p-med); }
-.priority-alta { --p: var(--p-high); }
+.priority-alta  { --p: var(--p-high); }
 
-/* =========================
-   CHECK
-========================= */
+/* ========= BOLINHA DE PRIORIDADE (MICRO) ========= */
+.priority-dot {
+  width: 8px !important;
+  height: 8px !important;
 
+  min-width: 8px !important;
+  min-height: 8px !important;
+  max-width: 8px !important;
+  max-height: 8px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1 !important;
+
+  background-color: var(--p) !important;
+  background-image: none !important;
+
+  border: none !important;
+  outline: none !important;
+
+  display: block !important;
+  flex: 0 0 8px !important;
+
+  box-shadow: none !important;
+}
+
+/* ========= CHECK (CÍRCULO PERFEITO) ========= */
 .check {
   width: 18px !important;
   height: 18px !important;
+
   min-width: 18px !important;
   min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
 
-  border-radius: 999px !important;
-  border: 1px solid var(--border);
-  background: transparent;
+  padding: 0 !important;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1 !important;
 
-  font-size: 11px;
-  color: transparent;
+  border: 2px solid rgba(148, 163, 184, 0.55) !important;
+  background: transparent !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  cursor: pointer !important;
 }
 
+.checkmark {
+  width: 100% !important;
+  height: 100% !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+
+  color: transparent !important;
+}
+
+/* concluído */
 .check.is-done {
-  background: var(--p);
-  border-color: var(--p);
-  color: #fff;
+  background: var(--p) !important;
+  border-color: var(--p) !important;
 }
 
-/* =========================
-   TEXT
-========================= */
+.check.is-done .checkmark {
+  color: #fff !important;
+}
 
+/* ========= TEXT ========= */
 .text {
   flex: 1;
   font-size: 13px;
+  color: rgba(243, 244, 246, 0.95);
 }
 
-/* =========================
-   DELETE
-========================= */
+.todo-item.done .text {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
 
+/* ========= DELETE ========= */
 .delete {
-  color: var(--muted);
-  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: rgba(148, 163, 184, 0.85);
+  cursor: pointer;
+}
+
+.delete:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+/* ========= EMPTY ========= */
+.empty {
+  text-align: center;
+  color: rgba(148, 163, 184, 0.9);
+  padding: 18px 0;
+  font-size: 13px;
 }
