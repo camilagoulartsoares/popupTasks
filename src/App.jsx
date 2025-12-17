@@ -6,6 +6,26 @@ const THEME_KEY = "popupTasksTheme";
 const MIN_KEY = "popupTasksMinimized";
 const CONTAINER_ID = "popup-tasks-widget";
 
+function sortTodos(list) {
+  const priorityRank = {
+    alta: 0,
+    media: 1,
+    baixa: 2
+  };
+
+  return [...list].sort((a, b) => {
+    const pA = a?.priority || "media";
+    const pB = b?.priority || "media";
+
+    const pDiff = (priorityRank[pA] ?? 1) - (priorityRank[pB] ?? 1);
+    if (pDiff !== 0) return pDiff;
+
+    if (a.done !== b.done) return a.done ? 1 : -1;
+
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+}
+
 function App({ onClose }) {
   const [hydrated, setHydrated] = useState(false);
   const [todos, setTodos] = useState([]);
@@ -170,6 +190,8 @@ function App({ onClose }) {
     );
   }
 
+  const orderedTodos = sortTodos(todos);
+
   return (
     <div className={`app theme-${theme}`}>
       <header className="app-header">
@@ -205,12 +227,11 @@ function App({ onClose }) {
         </form>
 
         <ul className="todo-list">
-          {todos.map(todo => (
+          {orderedTodos.map(todo => (
             <li
               key={todo.id}
               className={`todo-item priority-${todo.priority || "media"} ${todo.done ? "done" : ""}`}
             >
-              {/* bolinha da prioridade (mini) */}
               <button
                 className={`priority-dot priority-${todo.priority || "media"}`}
                 onClick={() => cyclePriority(todo.id)}
@@ -218,7 +239,6 @@ function App({ onClose }) {
                 disabled={editingId === todo.id}
               />
 
-              {/* círculo do check */}
               <button
                 className={`check ${todo.done ? "is-done" : ""}`}
                 onClick={() => toggleTodo(todo.id)}
