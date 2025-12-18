@@ -92,10 +92,14 @@
   color: var(--fg);
 }
 
+/* ✅ AJUSTE 1: app-content vira "coluna" e para de rolar */
 .app-content {
   margin-top: 10px;
   flex: 1;
-  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .add-form {
@@ -124,10 +128,17 @@
   place-items: center;
 }
 
+/* ✅ AJUSTE 2: agora QUEM ROLA é a lista */
 .todo-list {
   list-style: none;
   padding: 0;
   margin: 0;
+
+  flex: 1;
+  overflow-y: auto;
+
+  /* opcional pra não "cortar" a sombra dos cards no scroll */
+  padding-bottom: 2px;
 }
 
 .todo-item {
@@ -247,6 +258,7 @@
   color: var(--muted);
 }
 
+/* ✅ AJUSTE 3: botão fica sempre no final + mais bonito */
 .clear-done {
   margin-top: 10px;
   padding: 10px;
@@ -254,6 +266,19 @@
   background: rgba(148,163,184,0.12);
   border: 1px solid var(--border);
   color: var(--fg);
+
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+}
+
+.clear-done:hover {
+  background: rgba(148,163,184,0.16);
+  border-color: rgba(148,163,184,0.35);
+  transform: translateY(-1px);
+}
+
+.clear-done:active {
+  transform: translateY(0);
 }
 
 .app.theme-light {
