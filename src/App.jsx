@@ -1,44 +1,41 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 
 const STORAGE_KEY = "popupTasks";
-const THEME_KEY = "popupTasksTheme";
 const MIN_KEY = "popupTasksMinimized";
 const CONTAINER_ID = "popup-tasks-widget";
 
-function sortTodos(list) {
-  const priorityRank = {
-    alta: 0,
-    media: 1,
-    baixa: 2
-  };
+function getCategory(text) {
+  const t = (text || "").trim().toLowerCase();
+  if (t.startsWith("bug:") || t.startsWith("bug ")) return "bug";
+  if (t.startsWith("feature:") || t.startsWith("feature ")) return "feature";
+  if (t.startsWith("design:") || t.startsWith("design ")) return "design";
+  return "outros";
+}
 
-  return [...list].sort((a, b) => {
-    const pA = a?.priority || "media";
-    const pB = b?.priority || "media";
-
-    const pDiff = (priorityRank[pA] ?? 1) - (priorityRank[pB] ?? 1);
-    if (pDiff !== 0) return pDiff;
-
-    if (a.done !== b.done) return a.done ? 1 : -1;
-
-    return (b.createdAt || 0) - (a.createdAt || 0);
-  });
+function labelCategory(cat) {
+  if (cat === "bug") return "🐛 BUG";
+  if (cat === "feature") return "✨ Feature";
+  if (cat === "design") return "🎨 Design";
+  return "📌 Outros";
 }
 
 function App({ onClose }) {
   const [hydrated, setHydrated] = useState(false);
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
-
-  const [theme, setTheme] = useState(() =>
-    window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-  );
   const [isMinimized, setIsMinimized] = useState(false);
 
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const editInputRef = useRef(null);
+
+  const [collapsed, setCollapsed] = useState({
+    bug: false,
+    feature: false,
+    design: false,
+    outros: false
+  });
 
   useEffect(() => {
     if (!chrome?.storage?.local) {
@@ -46,21 +43,11 @@ function App({ onClose }) {
       return;
     }
 
-    chrome.storage.local.get([STORAGE_KEY, THEME_KEY, MIN_KEY], res => {
+    chrome.storage.local.get([STORAGE_KEY, MIN_KEY], res => {
       const storedTodos = res?.[STORAGE_KEY];
-      const storedTheme = res?.[THEME_KEY];
       const storedMin = res?.[MIN_KEY];
 
-      if (Array.isArray(storedTodos)) {
-        setTodos(
-          storedTodos.map(t => ({
-            ...t,
-            priority: t?.priority || "media"
-          }))
-        );
-      }
-
-      if (storedTheme === "light" || storedTheme === "dark") setTheme(storedTheme);
+      if (Array.isArray(storedTodos)) setTodos(storedTodos);
       if (typeof storedMin === "boolean") setIsMinimized(storedMin);
 
       setHydrated(true);
@@ -71,11 +58,6 @@ function App({ onClose }) {
     if (!hydrated || !chrome?.storage?.local) return;
     chrome.storage.local.set({ [STORAGE_KEY]: todos });
   }, [todos, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated || !chrome?.storage?.local) return;
-    chrome.storage.local.set({ [THEME_KEY]: theme });
-  }, [theme, hydrated]);
 
   useEffect(() => {
     if (!hydrated || !chrome?.storage?.local) return;
@@ -103,9 +85,9 @@ function App({ onClose }) {
       });
     } else {
       Object.assign(container.style, {
-        width: "340px",
-        height: "320px",
-        maxHeight: "320px",
+        width: "420px",
+        height: "560px",
+        maxHeight: "560px",
         background: "transparent",
         overflow: "visible"
       });
@@ -122,7 +104,6 @@ function App({ onClose }) {
         id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()),
         text,
         done: false,
-        priority: "media",
         createdAt: Date.now()
       },
       ...prev
@@ -133,18 +114,6 @@ function App({ onClose }) {
 
   function toggleTodo(id) {
     setTodos(prev => prev.map(t => (t.id === id ? { ...t, done: !t.done } : t)));
-  }
-
-  function cyclePriority(id) {
-    const order = ["baixa", "media", "alta"];
-    setTodos(prev =>
-      prev.map(t => {
-        if (t.id !== id) return t;
-        const current = t.priority || "media";
-        const next = order[(order.indexOf(current) + 1) % order.length];
-        return { ...t, priority: next };
-      })
-    );
   }
 
   function startEdit(todo) {
@@ -174,47 +143,50 @@ function App({ onClose }) {
     }
   }
 
-  function clearDone() {
-    setTodos(prev => prev.filter(t => !t.done));
-  }
-
   const remaining = todos.filter(t => !t.done).length;
+
+  const grouped = useMemo(() => {
+    const base = { bug: [], feature: [], design: [], outros: [] };
+    for (const t of todos) base[getCategory(t.text)].push(t);
+
+    const sortFn = (a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    };
+
+    base.bug.sort(sortFn);
+    base.feature.sort(sortFn);
+    base.design.sort(sortFn);
+    base.outros.sort(sortFn);
+
+    return base;
+  }, [todos]);
 
   if (isMinimized) {
     return (
-      <div className={`app theme-${theme} is-minimized`}>
-        <button
-          className="minimized-fab"
-          onClick={() => setIsMinimized(false)}
-          title="Abrir"
-          aria-label="Abrir PopupTasks"
-        >
+      <div className="app is-minimized">
+        <button className="minimized-fab" onClick={() => setIsMinimized(false)} title="Abrir" aria-label="Abrir">
           📝
         </button>
       </div>
     );
   }
 
-  const orderedTodos = sortTodos(todos);
+  const groupOrder = ["bug", "feature", "design", "outros"];
 
   return (
-    <div className={`app theme-${theme}`}>
+    <div className="app">
       <header className="app-header">
         <div className="title-group">
-          <h1>PopupTasks</h1>
-          <span className="badge">{remaining} pendente(s)</span>
+          <h1>Tarefas</h1>
+          <span className="badge">{remaining} pendentes</span>
         </div>
 
         <div className="header-actions">
-          <button className="icon-btn" onClick={() => setTheme(t => (t === "light" ? "dark" : "light"))}>
-            {theme === "light" ? "🌙" : "☀️"}
-          </button>
-
-          <button className="icon-btn" onClick={() => setIsMinimized(true)} title="Minimizar">
+          <button className="icon-btn" onClick={() => setIsMinimized(true)} title="Minimizar" aria-label="Minimizar">
             ▾
           </button>
-
-          <button className="icon-btn" onClick={onClose} title="Fechar">
+          <button className="icon-btn" onClick={onClose} title="Fechar" aria-label="Fechar">
             ×
           </button>
         </div>
@@ -228,66 +200,80 @@ function App({ onClose }) {
             value={input}
             onChange={e => setInput(e.target.value)}
           />
-          <button type="submit">+</button>
+          <button type="submit" aria-label="Adicionar">
+            +
+          </button>
         </form>
 
         <ul className="todo-list">
-          {orderedTodos.map(todo => (
-            <li
-              key={todo.id}
-              className={`todo-item priority-${todo.priority || "media"} ${todo.done ? "done" : ""}`}
-            >
-              <button
-                className={`priority-dot priority-${todo.priority || "media"}`}
-                onClick={() => cyclePriority(todo.id)}
-                title="Mudar prioridade"
-                disabled={editingId === todo.id}
-              />
+          {groupOrder.map(cat => {
+            const list = grouped[cat];
+            if (!list.length) return null;
 
-              <button
-                className={`check ${todo.done ? "is-done" : ""}`}
-                onClick={() => toggleTodo(todo.id)}
-                title="Concluir"
-                disabled={editingId === todo.id}
-              >
-                <span className="checkmark" aria-hidden="true">
-                  {todo.done ? "✓" : ""}
-                </span>
-              </button>
+            const isCollapsed = !!collapsed[cat];
 
-              {editingId === todo.id ? (
-                <input
-                  ref={editInputRef}
-                  className="edit-input"
-                  value={editingText}
-                  onChange={e => setEditingText(e.target.value)}
-                  onKeyDown={handleEditKeyDown}
-                  onBlur={saveEdit}
-                />
-              ) : (
-                <span className="text" onDoubleClick={() => startEdit(todo)} onClick={() => startEdit(todo)}>
-                  {todo.text}
-                </span>
-              )}
+            return (
+              <li key={cat} className={`group group-${cat}`}>
+                <div
+                  className="group-header"
+                  onClick={() => setCollapsed(s => ({ ...s, [cat]: !s[cat] }))}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="group-left">
+                    <div className="chev">{isCollapsed ? "▸" : "▾"}</div>
+                    <div className="group-title">{labelCategory(cat)}</div>
+                  </div>
+                  <div className="group-pill">{list.length}</div>
+                </div>
 
-              <button
-                className="delete"
-                onClick={() => setTodos(prev => prev.filter(t => t.id !== todo.id))}
-                title="Excluir"
-              >
-                ×
-              </button>
-            </li>
-          ))}
+                <div className={`group-body ${isCollapsed ? "collapsed" : ""}`}>
+                  {list.map(todo => (
+                    <div key={todo.id} className={`todo-item ${todo.done ? "done" : ""}`}>
+                      <span className={`cat-dot dot-${cat}`} />
+                      <button
+                        className={`check ${todo.done ? "is-done" : ""}`}
+                        onClick={() => toggleTodo(todo.id)}
+                        title="Concluir"
+                        disabled={editingId === todo.id}
+                      >
+                        <span className="checkmark" aria-hidden="true">
+                          {todo.done ? "✓" : ""}
+                        </span>
+                      </button>
+
+                      {editingId === todo.id ? (
+                        <input
+                          ref={editInputRef}
+                          className="edit-input"
+                          value={editingText}
+                          onChange={e => setEditingText(e.target.value)}
+                          onKeyDown={handleEditKeyDown}
+                          onBlur={saveEdit}
+                        />
+                      ) : (
+                        <span className="text" onClick={() => startEdit(todo)}>
+                          {todo.text}
+                        </span>
+                      )}
+
+                      <button
+                        className="delete"
+                        onClick={() => setTodos(prev => prev.filter(t => t.id !== todo.id))}
+                        title="Excluir"
+                        aria-label="Excluir"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </li>
+            );
+          })}
 
           {todos.length === 0 && <li className="empty">Sem tarefas por enquanto ✨</li>}
         </ul>
-
-        {todos.some(t => t.done) && (
-          <button className="clear-done" onClick={clearDone}>
-            Limpar concluídas
-          </button>
-        )}
       </div>
     </div>
   );
